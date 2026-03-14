@@ -36,7 +36,7 @@ void printTasks(const std::vector<Task>& tasks) {
 
 int main() {
 	std::vector<Task> tasks = Storage::loadTasks();
-	std::vector<Task> completedTasks;
+
 	int choice;
 	int idCounter = 1;
 
@@ -70,14 +70,14 @@ int main() {
 				break;
 			}
 			case MenuOptions::MOVECOMPLETED: {
-				completedTasks = TaskManager::moveCompleted(tasks);
+				std::vector<Task> completedTasks = TaskManager::moveCompleted(tasks);
+				if (!completedTasks.empty()) {
+					Storage::saveTasks(completedTasks, "completedTasks.txt", false);
+				}
 				break;
 			}
 			case MenuOptions::EXIT: {
 				Storage::saveTasks(tasks, "tasks.txt", true);
-				if (!completedTasks.empty()) {
-					Storage::saveTasks(completedTasks, "completedTasks.txt", false);
-				}
 				// Exit
 				return 0;
 			}
