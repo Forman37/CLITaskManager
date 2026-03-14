@@ -74,7 +74,7 @@ void TaskManager::completeTask(std::vector<Task>& tasks) {
 	}
 }
 
-void TaskManager::moveCompleted(std::vector<Task> &tasks) {
+std::vector<Task> TaskManager::moveCompleted(std::vector<Task> &tasks) {
 	std::vector<Task> completedTasks;
 	std::vector<int> completedIndexes;
 
@@ -83,4 +83,7 @@ void TaskManager::moveCompleted(std::vector<Task> &tasks) {
 			completedTasks.emplace_back(tasks[i]);
 		}
 	}
+
+	std::erase_if(tasks, [](const Task& task) { return task.isCompleted(); });
+	return completedTasks;
 }

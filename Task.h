@@ -1,7 +1,8 @@
 //
 // Created by James Forman on 3/10/26.
 //
-#pragma once
+
+#pragma once // Testing instead of the standard #ifndef
 #include <string>
 #include <chrono>
 #include <optional>

@@ -15,7 +15,7 @@ public:
 	static void deleteTask(std::vector<Task>& tasks);
 	static void updateTask(std::vector<Task>& tasks);
 	static void completeTask(std::vector<Task>& tasks);
-	static void moveCompleted(std::vector<Task>& tasks);
+	static std::vector<Task> moveCompleted(std::vector<Task>& tasks);
 };
 
 
