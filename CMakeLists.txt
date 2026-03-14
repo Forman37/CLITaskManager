@@ -5,4 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(CLITaskManager main.cpp
         Task.h
-        Task.cpp)
+        Task.cpp
+        Storage.cpp
+        Storage.h
+        TaskManager.cpp
+        TaskManager.h
+)
