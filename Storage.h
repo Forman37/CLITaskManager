@@ -15,7 +15,7 @@ public:
 
 	static std::vector<Task> loadTasks();
 
-	static bool saveTasks(const std::vector<Task>& tasks);
+	static bool saveTasks(const std::vector<Task>& tasks, const std::string &fileName, bool truncate);
 };
 
 

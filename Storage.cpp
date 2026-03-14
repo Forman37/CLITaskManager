@@ -79,8 +79,15 @@ std::vector<Task> Storage::loadTasks() {
 	return tasks;
 }
 
-bool Storage::saveTasks(const std::vector<Task> &tasks) {
-	std::ofstream outfile("tasks.txt", std::ios::trunc);
+bool Storage::saveTasks(const std::vector<Task> &tasks, const std::string &fileName, const bool truncate) {
+	std::ofstream outfile;
+
+	if (truncate) {
+		outfile.open(fileName, std::ios::trunc);
+	}else {
+		outfile.open(fileName, std::ios::app);
+	}
+
 	if (!outfile) return false;
 
 	for (const auto& task : tasks) {
