@@ -69,6 +69,7 @@ void TaskManager::completeTask(std::vector<Task>& tasks) {
 	std::cout << "Index : " << index << "   Task size : " << tasks.size() << "\n";
 	if (index <= tasks.size()) {
 		tasks[index - 1].markCompleted();
+		tasks[index - 1].setCompletedTime();
 	}else {
 		std::cout << "There is no task of that value\n";
 	}

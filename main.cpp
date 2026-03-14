@@ -21,16 +21,16 @@ enum class MenuOptions {
 void printTasks(const std::vector<Task>& tasks) {
 	size_t index = 1;
 	std::cout << "\n";
-	std::cout << "--------------------------------------------------" << std::endl;
-	std::cout << "|                Task List                       |" << std::endl;
-	std::cout << "--------------------------------------------------" << std::endl;
+	std::cout << "------------------------------------------------------------" << std::endl;
+	std::cout << "|                     Task List                            |" << std::endl;
+	std::cout << "------------------------------------------------------------" << std::endl;
 	for (const auto& task : tasks) {
-		constexpr int WIDTH = 50;
+		constexpr int WIDTH = 60;
 		std::cout << "|  " << std::left << std::setw(WIDTH - 4) <<
-			(std::to_string(index) + ": " + task.title + (task.isCompleted() ? " [Done]" : "")) << "|" << std::endl;
+			(std::to_string(index) + ": " + task.title + (task.isCompleted() ? "   [Done] " : "   ")) + task.getFormattedCompleteTime() << "|" << std::endl;
 		index++;
 	}
-	std::cout << "--------------------------------------------------" << std::endl;
+	std::cout << "------------------------------------------------------------" << std::endl;
 	std::cout << "\n\n";
 }
 
