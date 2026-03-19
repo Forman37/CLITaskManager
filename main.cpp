@@ -18,7 +18,8 @@ enum class MenuOptions {
 	SHOWTABLES = 6,
 	SWITCHTABLE = 7,
 	DELETETABLE = 8,
-	EXIT = 9
+	PRINTTASK = 9,
+	EXIT = 10
 };
 
 void printChoices() {
@@ -31,7 +32,8 @@ void printChoices() {
 	          << "6. Show Tables" << std::string(SPACING, ' ')
 			  << "7. Switch Tables" << std::string(SPACING, ' ')
 			  << "8. Delete Table" << std::string(SPACING, ' ')
-			  << "9. Exit\n";
+			  << "9. Print Task" << std::string(SPACING, ' ')
+			  << "10. Exit\n";
 	std::cout << "Enter Choice: ";
 }
 void printTasks(const std::vector<Task>& tasks, std::string path) {
@@ -270,6 +272,24 @@ int main() {
 					tasks = tm.listTasks(); // Refresh list after deleting tables
 				}catch (const std::exception& e) {
 					std::cerr << "Error deleting tables: " << e.what() << "\n";
+				}
+				break;
+			}
+			case MenuOptions::PRINTTASK: {
+				try {
+					long selectedTaskId;
+					std::cout << "Which task id would you like to print the task for? ";
+					std::cin >> selectedTaskId;
+					std::optional<Task> t;
+					t = tm.getTaskById(selectedTaskId);
+
+					if (t.has_value()) {
+						std::cout << "\nID(" << t->getId() << "):  " << t->getTitle() << std::endl;
+					}else {
+						std::cout << "\nThere was an error printing this task!\n";
+					}
+				}catch (std::exception& e) {
+					std::cerr << "Error printing task: " << e.what() << "\n";
 				}
 				break;
 			}

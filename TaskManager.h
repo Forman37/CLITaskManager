@@ -17,6 +17,8 @@ public:
 	// return current tasks from DB
 	std::vector<Task> listTasks();
 
+	std::optional<Task> getTaskById(long id) { return storage_.getTaskById(id); }
+
 	// update and persist by id
 	bool updateTitle(long id, const std::string& newTitle);
 	bool markCompleted(long id);
