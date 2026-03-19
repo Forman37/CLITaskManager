@@ -130,10 +130,12 @@ bool Storage::updateTask(const Task &task) {
 	return rc == SQLITE_DONE;
 }
 
-bool Storage::deleteTask(long id) {
+bool Storage::deleteTask(const long id) {
 	std::string sql = "DELETE FROM \"" + dbName_ + "\" WHERE id = ?;";
 	sqlite3_stmt *stmt = nullptr;
-	if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) { return false; }
+	if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+		throw std::runtime_error(sqlite3_errmsg(db_));
+	}
 	sqlite3_bind_int64(stmt, 1, static_cast<sqlite3_int64>(id));
 	int rc = sqlite3_step(stmt);
 	sqlite3_finalize(stmt);
@@ -205,6 +207,31 @@ void Storage::moveCompletedToNewTable(std::string newTablePath) {
 		if (!deleteTask(task.getId())) {
 			throw std::runtime_error("Unable to delete task: " + std::to_string(task.getId()));
 		}
+	}
+}
+
+void Storage::moveTaskToNewTable(const long id, const std::string &newTablePath) {
+	Task chosenTask;
+	if (newTablePath.empty()) {
+		throw std::runtime_error("Empty newTablePath");
+	}
+
+	std::string sql = "SELECT id, title, completed, completed_at FROM \"" + dbName_ + "\" WHERE id = ? LIMIT 1;";
+	sqlite3_stmt* stmt = nullptr;
+	if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+		throw std::runtime_error(sqlite3_errmsg(db_));
+	}
+	sqlite3_bind_int64(stmt, 1, static_cast<sqlite3_int64>(id));
+	std::optional<Task> result;
+	if (sqlite3_step(stmt) == SQLITE_ROW) {
+		chosenTask = Task::fromSqliteRow(stmt);
+	}
+	sqlite3_finalize(stmt);
+
+	long deletionID = chosenTask.getId();
+	addTask(chosenTask, newTablePath);
+	if (!deleteTask(deletionID)) {
+		throw std::runtime_error("Unable to delete task: " + std::to_string(chosenTask.getId()));
 	}
 }
 

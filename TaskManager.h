@@ -29,6 +29,7 @@ public:
 	std::vector<std::string> showTables() { return storage_.showTables(); }
 	void changeTable(std::string newTablePath);
 	void deleteTable(const std::string &tablePath) { storage_.deleteTable(tablePath); }
+	void moveTaskToNewTable(long id, std::string& newTablePath);
 
 	// convenience: return optional single task
 	std::optional<Task> getTask(long id);

@@ -31,6 +31,7 @@ public:
 
 	//Move
 	void moveCompletedToNewTable(std::string newTablePath);
+	void moveTaskToNewTable(long id, const std::string& newTablePath);
 
 	// Raw access
 	sqlite3* get() { return db_; }

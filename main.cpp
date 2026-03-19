@@ -19,7 +19,8 @@ enum class MenuOptions {
 	SWITCHTABLE = 7,
 	DELETETABLE = 8,
 	PRINTTASK = 9,
-	EXIT = 10
+	MOVETASK = 10,
+	EXIT = 11
 };
 
 void printChoices() {
@@ -28,12 +29,13 @@ void printChoices() {
 			  << "2. Update Task" << std::string(SPACING, ' ')
 		      << "3. Remove Task" << std::string(SPACING, ' ')
 		      << "4. Complete" << std::string(SPACING, ' ')
-	          << "5. Transfer completed tasks to a different table\n" //<< std::string(SPACING, ' ')
+	          << "5. Move completed tasks to a different table\n" //<< std::string(SPACING, ' ')
 	          << "6. Show Tables" << std::string(SPACING, ' ')
 			  << "7. Switch Tables" << std::string(SPACING, ' ')
 			  << "8. Delete Table" << std::string(SPACING, ' ')
 			  << "9. Print Task" << std::string(SPACING, ' ')
-			  << "10. Exit\n";
+			  << "10. Move Task to Different Table" << std::string(SPACING, ' ')
+			  << "11. Exit\n";
 	std::cout << "Enter Choice: ";
 }
 void printTasks(const std::vector<Task>& tasks, std::string path) {
@@ -290,6 +292,24 @@ int main() {
 					}
 				}catch (std::exception& e) {
 					std::cerr << "Error printing task: " << e.what() << "\n";
+				}
+				break;
+			}
+			case MenuOptions::MOVETASK: {
+				try {
+					long taskOption;
+					std::string newTablePath;
+
+					std::cout << "Please enter the ID of the task you would like to move : ";
+					std::cin >> taskOption;
+					showTables(tm);
+					std::cout << "Enter new table name to move completed tasks to : ";
+					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					std::getline(std::cin, newTablePath);
+					tm.moveTaskToNewTable(taskOption, newTablePath);
+					tasks = tm.listTasks(); // Refresh list after moving completed tasks
+				}catch (std::exception& e) {
+					std::cerr << "Error moving completed tasks: " << e.what() << "\n";
 				}
 				break;
 			}

@@ -45,6 +45,10 @@ void TaskManager::changeTable(std::string newTablePath) {
 	storage_.changeTable(newTablePath);
 }
 
+void TaskManager::moveTaskToNewTable(long id, std::string &newTablePath) {
+	storage_.moveTaskToNewTable(id, newTablePath);
+}
+
 std::optional<Task> TaskManager::getTask(long id) {
 	return storage_.getTaskById(id);
 }
