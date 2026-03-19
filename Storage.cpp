@@ -173,16 +173,15 @@ std::optional<Task> Storage::getTaskById(long id) {
 	return result;
 }
 
-void Storage::moveCompletedToNewDatabase(std::string newDbPath) {
+void Storage::moveCompletedToNewTable(std::string newTablePath) {
 	std::vector<Task> savedTasks;
-	if (newDbPath.empty()) {
+	if (newTablePath.empty()) {
 		throw std::runtime_error("Empty newDbPath");
 	}
 
-	std::string sql = "SELECT id, title, completed, completed_at FROM \"" + dbName_ + "\" WHERE completed = 1 ORDER BY id;";
+	std::string sql = "SELECT id, title, completed, completed_at FROM \"" + dbName_ + "\" WHERE completed = 1 ORDER BY completed_at;";
 	sqlite3_stmt* stmt = nullptr;
 	int rc = sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr);
-	std::cout << "RC : " << rc << "\n";
 	if (rc != SQLITE_OK) {
 		std::cout << "There was an issue fetching tasks while saving\n";
 		throw std::runtime_error(sqlite3_errmsg(db_));
@@ -195,28 +194,47 @@ void Storage::moveCompletedToNewDatabase(std::string newDbPath) {
 	}
 	sqlite3_finalize(stmt);
 
-	if (sqlite3_open(newDbPath.c_str(), &db_) != SQLITE_OK) {
-		std::string msg = db_ ? sqlite3_errmsg(db_) : "unknown";
-		if (db_) sqlite3_close(db_);
-		throw std::runtime_error("Failed to open DB: " + msg);
-	}
-	createTable(newDbPath);
+	createTable(newTablePath);
 
 	for (const Task task : savedTasks) {
-		addTask(const_cast<Task&>(task), newDbPath);
-		std::cout << "Task added to saved database : " << task.getTitle() << "\n";
-	}
-
-	std::string oldDBPath = dbName_ + ".db";
-	if (sqlite3_open(oldDBPath.c_str(), &db_) != SQLITE_OK) {
-		std::string msg = db_ ? sqlite3_errmsg(db_) : "unknown";
-		if (db_) sqlite3_close(db_);
-		throw std::runtime_error("Failed to open DB: " + msg);
+		addTask(const_cast<Task&>(task), newTablePath);
+		std::cout << "Task added to table : " << task.getTitle() << "\n";
 	}
 
 	for (const Task task : savedTasks) {
 		if (!deleteTask(task.getId())) {
 			throw std::runtime_error("Unable to delete task: " + std::to_string(task.getId()));
 		}
+	}
+}
+
+std::vector<std::string> Storage::showTables() {
+	std::vector<std::string> out;
+	const char* sql = "SELECT name FROM sqlite_master WHERE type='table';";
+	sqlite3_stmt* stmt;
+	const char* blackList = "sqlite_sequence";
+
+	sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr);
+
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		const unsigned char* tableName = sqlite3_column_text(stmt, 0);
+		if (strcmp(blackList, reinterpret_cast<const char*>(tableName)) != 0) {
+			out.emplace_back(reinterpret_cast<const char*>(tableName));
+		}
+	}
+	sqlite3_finalize(stmt);
+
+	return out;
+}
+
+void Storage::changeTable(std::string newTablePath) {
+	if (newTablePath.empty()) {
+		throw std::runtime_error("Empty Table Path");
+	}
+
+	if (isValid(newTablePath)) {
+		dbName_ = newTablePath;
+	}else {
+		throw std::runtime_error("Invalid Table Path");
 	}
 }

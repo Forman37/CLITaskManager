@@ -30,10 +30,13 @@ public:
 	std::optional<Task> getTaskById(long id);
 
 	//Move
-	void moveCompletedToNewDatabase(std::string newDbPath);
+	void moveCompletedToNewTable(std::string newTablePath);
 
 	// Raw access
 	sqlite3* get() { return db_; }
+	std::vector<std::string> showTables();
+	void changeTable(std::string newTablePath);
+
 private:
 	sqlite3* db_ = nullptr;
 	std::string dbName_;

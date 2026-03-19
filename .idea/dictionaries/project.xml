@@ -7,6 +7,9 @@
       <w>idwidth</w>
       <w>movecompleted</w>
       <w>outterwidth</w>
+      <w>showdatabases</w>
+      <w>showtables</w>
+      <w>switchtable</w>
       <w>titlewidth</w>
       <w>totalwidth</w>
     </words>

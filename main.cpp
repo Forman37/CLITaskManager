@@ -16,20 +16,24 @@ enum class MenuOptions {
 	REMOVE = 3,
 	COMPLETE = 4,
 	MOVECOMPLETED = 5,
-	EXIT = 6
+	SHOWTABLES = 6,
+	SWITCHTABLE = 7,
+	EXIT = 8
 };
 
 void printChoices() {
 	constexpr int SPACING = 4;
 	std::cout << "1. Add Task" << std::string(SPACING, ' ')
 			  << "2. Update Task" << std::string(SPACING, ' ')
-		      << "3. Remove Task\n"
-		      << "4. Complete" << std::string(SPACING, ' ')
-	          << "5. Transfer Completed Tasks to a different database" << std::string(SPACING, ' ')
-			  << "6. Exit\n";
+		      << "3. Remove Task" << std::string(SPACING, ' ')
+		      << "4. Complete\n" //<< std::string(SPACING, ' ')
+	          << "5. Transfer completed tasks to a different table" << std::string(SPACING, ' ')
+	          << "6. Show Tables" << std::string(SPACING, ' ')
+			  << "7. Switch Tables" << std::string(SPACING, ' ')
+			  << "8. Exit\n";
 	std::cout << "Enter Choice: ";
 }
-void printTasks(const std::vector<Task>& tasks) {
+void printTasks(const std::vector<Task>& tasks, std::string path) {
 	constexpr int IDWIDTH = 8;
 	constexpr int TITLEWIDTH = 60;
 	constexpr int COMPLTEDWIDTH = 9;
@@ -39,18 +43,18 @@ void printTasks(const std::vector<Task>& tasks) {
 
 	constexpr int TOTALWIDTH = IDWIDTH + TITLEWIDTH + COMPLTEDWIDTH + COMPLETEDTIMEWIDTH + 4 + (PADDING_BETWEEN * 3); // +4 for the beginning and final '|' and the spaces around them
 
-	auto printBoarder = [&]() {
+	auto printBorder = [&]() {
 		std::cout << std::string(TOTALWIDTH, '-') << "\n";
 	};
 
 	// Header
-	std::cout << "\n\n";
-	printBoarder();
-	std::string header = " Task List ";
+	std::cout << "\n";
+	printBorder();
+	std::string header = " " + path + " table ";
 	int paddingLeft = std::max(0, (TOTALWIDTH - static_cast<int>(header.size())) / 2 - 1);
 	int paddingRight = std::max(0, TOTALWIDTH - static_cast<int>(header.size()) - paddingLeft - 2); // -2 for the '|'
 	std::cout << "|" << std::string(paddingLeft, ' ') << header << std::string(paddingRight, ' ') << "|\n";
-	printBoarder();
+	printBorder();
 
 	// Content
 	for (const auto& task : tasks) {
@@ -71,8 +75,25 @@ void printTasks(const std::vector<Task>& tasks) {
 	}
 
 	// Footer
-	printBoarder();
+	printBorder();
 	std::cout << "\n";
+}
+std::vector<std::string> showTables(TaskManager& tm) {
+	try {
+		std::vector<std::string> tableNames = tm.showTables();
+		int postedIndex = 1;
+		std::cout << "\nTables:\n";
+		for (const auto& tableName : tableNames) {
+			std::cout << postedIndex << ". " << tableName << std::endl;
+			postedIndex++;
+		}
+		std::cout << "\n";
+
+		return tableNames;
+	} catch (const std::exception& e) {
+		std::cout << "Error showing tables: " << e.what() << "\n";
+	}
+	return std::vector<std::string>();
 }
 
 int main() {
@@ -90,11 +111,12 @@ int main() {
 
 	std::vector<Task> tasks = tm.listTasks();
 
-	std::cout << "Opened Database Successfully\n";
+	std::cout << "Opened Database Successfully";
+	showTables(tm);
 
 	int choice;
 	while (true) {
-		printTasks(tasks);
+		printTasks(tasks, dbPath);
 		printChoices();
 
 		if (!(std::cin >> choice)) {
@@ -188,19 +210,48 @@ int main() {
 			}
 			case MenuOptions::MOVECOMPLETED: {
 				try {
+					showTables(tm);
 					std::string newDbPath;
-					std::cout << "Enter new database name to move completed tasks to: ";
+					std::cout << "Enter new table name to move completed tasks to : ";
 					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 					std::getline(std::cin, newDbPath);
-					tm.moveCompletedToNewDatabase(newDbPath);
+					tm.moveCompletedToNewTable(newDbPath);
 					tasks = tm.listTasks(); // Refresh list after moving completed tasks
 				} catch (const std::exception& e) {
 					std::cout << "Error moving completed tasks: " << e.what() << "\n";
 				}
 				break;
 			}
+			case MenuOptions::SHOWTABLES: {
+				showTables(tm);
+				break;
+			}
+			case MenuOptions::SWITCHTABLE: {
+				try {
+					std::vector<std::string> tableNames = showTables(tm);
+					int chosenIndex = 0;
+
+					std::cout << "\nPlease select the number of the table you wish to switch to : ";
+					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					std::cin >> chosenIndex;
+					chosenIndex -= 1;
+
+					if (chosenIndex < tableNames.size()) {
+						tm.changeTable(tableNames[chosenIndex]);
+						std::cout << "\nTable changed successfully.\n";
+					}else {
+						std::cout << "\nInvalid table choice!\n";
+						break;
+					}
+					tasks = tm.listTasks(); // Refresh list after switching tables
+					dbPath = tableNames[chosenIndex];
+				}catch (const std::exception& e) {
+					std::cerr << "Error switching tables: " << e.what() << "\n";
+				}
+				break;
+			}
 			case MenuOptions::EXIT: {
-				std::cout << "Exiting...\n";
+				std::cout << "\nExiting...\n";
 				return 0;
 			}
 			default: {
