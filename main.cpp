@@ -25,7 +25,7 @@ void printChoices() {
 			  << "2. Update Task" << std::string(SPACING, ' ')
 		      << "3. Remove Task\n"
 		      << "4. Complete" << std::string(SPACING, ' ')
-	          << "5. Transfer Completed Tasks to Save File\t" << std::string(SPACING, ' ')
+	          << "5. Transfer Completed Tasks to a different database" << std::string(SPACING, ' ')
 			  << "6. Exit\n";
 	std::cout << "Enter Choice: ";
 }
@@ -88,7 +88,6 @@ int main() {
 	Storage storage(dbPath);
 	TaskManager tm(storage);
 
-	std::cout << "Path : " << dbPath << "\n";
 	std::vector<Task> tasks = tm.listTasks();
 
 	std::cout << "Opened Database Successfully\n";
@@ -172,7 +171,16 @@ int main() {
 				break;
 			}
 			case MenuOptions::MOVECOMPLETED: {
-
+				try {
+					std::string newDbPath;
+					std::cout << "Enter new database name to move completed tasks to: ";
+					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					std::getline(std::cin, newDbPath);
+					tm.moveCompletedToNewDatabase(newDbPath);
+					tasks = tm.listTasks(); // Refresh list after moving completed tasks
+				} catch (const std::exception& e) {
+					std::cout << "Error moving completed tasks: " << e.what() << "\n";
+				}
 				break;
 			}
 			case MenuOptions::EXIT: {

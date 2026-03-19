@@ -22,6 +22,9 @@ public:
 	bool markCompleted(long id);
 	bool removeTask(long id);
 
+	// Move Completed to new Database
+	bool moveCompletedToNewDatabase(std::string newDbPath);
+
 	// convenience: return optional single task
 	std::optional<Task> getTask(long id);
 

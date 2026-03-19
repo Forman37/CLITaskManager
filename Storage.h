@@ -21,13 +21,16 @@ public:
 	void createTable(std::string& dbPath);
 
 	//CRUD
-	long addTask(Task& task);
+	long addTask(Task& task, std::string db = "");
 	bool updateTask(const Task& task);
 	bool deleteTask(long id);
 
 	//Read
 	std::vector<Task> getAllTasks();
 	std::optional<Task> getTaskById(long id);
+
+	//Move
+	void moveCompletedToNewDatabase(std::string newDbPath);
 
 	// Raw access
 	sqlite3* get() { return db_; }

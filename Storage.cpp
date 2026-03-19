@@ -63,9 +63,16 @@ void Storage::createTable(std::string& dbPath) {
 	}
 }
 
-long Storage::addTask(Task &task) {
+long Storage::addTask(Task &task, std::string db) {
 	if (!db_) throw std::runtime_error("DB not opened");
-	std::string sql = "INSERT INTO \"" + dbName_ + "\" (title, completed, completed_at) VALUES (?, ?, ?);";
+
+	if (db == ""){
+		db = dbName_;
+	}else if(!isValid(db)) {
+		throw std::runtime_error("Invalid database name to save to : " + db);
+	}
+
+	std::string sql = "INSERT INTO \"" + db + "\" (title, completed, completed_at) VALUES (?, ?, ?);";
 	sqlite3_stmt *stmt = nullptr;
 
 	int rc = sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr);
@@ -138,7 +145,7 @@ std::vector<Task> Storage::getAllTasks() {
 	std::string sql = "SELECT id, title, completed, completed_at FROM \"" + dbName_ + "\" ORDER BY id;";
 	sqlite3_stmt* stmt = nullptr;
 	if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-		std::cout << "There was an issue fetching tasks\n";
+		std::cout << "There was an issue fetching all tasks\n";
 		throw std::runtime_error(sqlite3_errmsg(db_));
 	}
 
@@ -164,4 +171,52 @@ std::optional<Task> Storage::getTaskById(long id) {
 	}
 	sqlite3_finalize(stmt);
 	return result;
+}
+
+void Storage::moveCompletedToNewDatabase(std::string newDbPath) {
+	std::vector<Task> savedTasks;
+	if (newDbPath.empty()) {
+		throw std::runtime_error("Empty newDbPath");
+	}
+
+	std::string sql = "SELECT id, title, completed, completed_at FROM \"" + dbName_ + "\" WHERE completed = 1 ORDER BY id;";
+	sqlite3_stmt* stmt = nullptr;
+	int rc = sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr);
+	std::cout << "RC : " << rc << "\n";
+	if (rc != SQLITE_OK) {
+		std::cout << "There was an issue fetching tasks while saving\n";
+		throw std::runtime_error(sqlite3_errmsg(db_));
+		return;
+	}
+
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		Task task = Task::fromSqliteRow(stmt);
+		savedTasks.push_back(task);
+	}
+	sqlite3_finalize(stmt);
+
+	if (sqlite3_open(newDbPath.c_str(), &db_) != SQLITE_OK) {
+		std::string msg = db_ ? sqlite3_errmsg(db_) : "unknown";
+		if (db_) sqlite3_close(db_);
+		throw std::runtime_error("Failed to open DB: " + msg);
+	}
+	createTable(newDbPath);
+
+	for (const Task task : savedTasks) {
+		addTask(const_cast<Task&>(task), newDbPath);
+		std::cout << "Task added to saved database : " << task.getTitle() << "\n";
+	}
+
+	std::string oldDBPath = dbName_ + ".db";
+	if (sqlite3_open(oldDBPath.c_str(), &db_) != SQLITE_OK) {
+		std::string msg = db_ ? sqlite3_errmsg(db_) : "unknown";
+		if (db_) sqlite3_close(db_);
+		throw std::runtime_error("Failed to open DB: " + msg);
+	}
+
+	for (const Task task : savedTasks) {
+		if (!deleteTask(task.getId())) {
+			throw std::runtime_error("Unable to delete task: " + std::to_string(task.getId()));
+		}
+	}
 }

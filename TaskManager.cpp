@@ -36,6 +36,11 @@ bool TaskManager::removeTask(long id) {
 	return storage_.deleteTask(id);
 }
 
+bool TaskManager::moveCompletedToNewDatabase(std::string newDbPath) {
+	storage_.moveCompletedToNewDatabase(newDbPath);
+	return true;
+}
+
 std::optional<Task> TaskManager::getTask(long id) {
 	return storage_.getTaskById(id);
 }
