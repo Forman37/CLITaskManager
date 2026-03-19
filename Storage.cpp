@@ -238,3 +238,22 @@ void Storage::changeTable(std::string newTablePath) {
 		throw std::runtime_error("Invalid Table Path");
 	}
 }
+
+void Storage::deleteTable(const std::string &tablePath) {
+	if (!isValid(tablePath) || tablePath.empty()) {
+		throw std::runtime_error("Invalid Table Path");
+	}
+
+	std::string sql = "DROP TABLE IF EXISTS \"" + tablePath + "\";";
+	char *err = nullptr;
+	sqlite3_stmt* stmt = nullptr;
+	int rc = sqlite3_exec(db_, sql.c_str(), nullptr, nullptr, &err);
+
+	if (rc != SQLITE_OK) {
+		std::string msg = err ? err : "unknown";
+		sqlite3_free(err);
+		throw std::runtime_error("There was an issue deleting the table : " + msg);
+	}
+
+	std::cout << "Table " << tablePath << " deleted successfully.\n";
+}

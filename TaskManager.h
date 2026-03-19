@@ -26,6 +26,7 @@ public:
 	bool moveCompletedToNewTable(const std::string &newTablePath);
 	std::vector<std::string> showTables() { return storage_.showTables(); }
 	void changeTable(std::string newTablePath);
+	void deleteTable(const std::string &tablePath) { storage_.deleteTable(tablePath); }
 
 	// convenience: return optional single task
 	std::optional<Task> getTask(long id);

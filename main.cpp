@@ -4,7 +4,6 @@
 #include <sstream>
 #include <limits>
 #include <iomanip>
-#include "sqlite3.h"
 
 #include "Task.h"
 #include "Storage.h"
@@ -18,7 +17,8 @@ enum class MenuOptions {
 	MOVECOMPLETED = 5,
 	SHOWTABLES = 6,
 	SWITCHTABLE = 7,
-	EXIT = 8
+	DELETETABLE = 8,
+	EXIT = 9
 };
 
 void printChoices() {
@@ -26,11 +26,12 @@ void printChoices() {
 	std::cout << "1. Add Task" << std::string(SPACING, ' ')
 			  << "2. Update Task" << std::string(SPACING, ' ')
 		      << "3. Remove Task" << std::string(SPACING, ' ')
-		      << "4. Complete\n" //<< std::string(SPACING, ' ')
-	          << "5. Transfer completed tasks to a different table" << std::string(SPACING, ' ')
+		      << "4. Complete" << std::string(SPACING, ' ')
+	          << "5. Transfer completed tasks to a different table\n" //<< std::string(SPACING, ' ')
 	          << "6. Show Tables" << std::string(SPACING, ' ')
 			  << "7. Switch Tables" << std::string(SPACING, ' ')
-			  << "8. Exit\n";
+			  << "8. Delete Table" << std::string(SPACING, ' ')
+			  << "9. Exit\n";
 	std::cout << "Enter Choice: ";
 }
 void printTasks(const std::vector<Task>& tasks, std::string path) {
@@ -98,7 +99,7 @@ std::vector<std::string> showTables(TaskManager& tm) {
 
 int main() {
 	std::string dbPath;
-	std::cout << "Please enter database name : ";
+	std::cout << "Please enter database name or press [Enter] for default : ";
 	std::getline(std::cin, dbPath);
 
 	size_t pos = dbPath.rfind(".db");
@@ -111,7 +112,7 @@ int main() {
 
 	std::vector<Task> tasks = tm.listTasks();
 
-	std::cout << "Opened Database Successfully";
+	std::cout << "Opened Database Successfully\n";
 	showTables(tm);
 
 	int choice;
@@ -247,6 +248,28 @@ int main() {
 					dbPath = tableNames[chosenIndex];
 				}catch (const std::exception& e) {
 					std::cerr << "Error switching tables: " << e.what() << "\n";
+				}
+				break;
+			}
+			case MenuOptions::DELETETABLE: {
+				try {
+					std::vector<std::string> tableNames = showTables(tm);
+					int chosenIndex = 0;
+
+					std::cout << "\nPlease select the number of the table you wish to delete : ";
+					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					std::cin >> chosenIndex;
+					chosenIndex -= 1;
+
+					if (chosenIndex < tableNames.size()) {
+						tm.deleteTable(tableNames[chosenIndex]);
+					}else {
+						std::cout << "\nInvalid table choice!\n";
+						break;
+					}
+					tasks = tm.listTasks(); // Refresh list after deleting tables
+				}catch (const std::exception& e) {
+					std::cerr << "Error deleting tables: " << e.what() << "\n";
 				}
 				break;
 			}
