@@ -15,10 +15,10 @@ extern "C" {
 
 class Storage {
 public:
-	explicit Storage(const std::string& dbPath);
+	explicit Storage(std::string& dbPath);
 	~Storage();
 
-	void createTable();
+	void createTable(std::string& dbPath);
 
 	//CRUD
 	long addTask(Task& task);
@@ -33,6 +33,7 @@ public:
 	sqlite3* get() { return db_; }
 private:
 	sqlite3* db_ = nullptr;
+	std::string dbName_;
 };
 
 

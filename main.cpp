@@ -76,9 +76,19 @@ void printTasks(const std::vector<Task>& tasks) {
 }
 
 int main() {
-	Storage storage("tasks.db");
+	std::string dbPath;
+	std::cout << "Please enter database name : ";
+	std::getline(std::cin, dbPath);
+
+	size_t pos = dbPath.rfind(".db");
+	if (pos == std::string::npos && dbPath.length() > 0) {
+		dbPath = dbPath + ".db";
+	}
+
+	Storage storage(dbPath);
 	TaskManager tm(storage);
 
+	std::cout << "Path : " << dbPath << "\n";
 	std::vector<Task> tasks = tm.listTasks();
 
 	std::cout << "Opened Database Successfully\n";
@@ -124,7 +134,7 @@ int main() {
 				}else {
 					std::cout << "Failed to update task. Check if the ID is correct.\n";
 				}
-				tasks = tm.listTasks();
+				tasks = tm.listTasks(); // Refresh list after updating
 				break;
 			}
 			case MenuOptions::REMOVE: {

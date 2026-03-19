@@ -7,24 +7,47 @@
 #include <chrono>
 #include <iostream>
 
-Storage::Storage(const std::string& dbPath) {
+Storage::Storage(std::string& dbPath) {
+	if (dbPath.empty()) {
+		dbPath = "tasks.db";
+	}
+
 	if (sqlite3_open(dbPath.c_str(), &db_) != SQLITE_OK) {
 		std::string msg = db_ ? sqlite3_errmsg(db_) : "unknown";
 		if (db_) sqlite3_close(db_);
 		throw std::runtime_error("Failed to open DB: " + msg);
 	}
-	createTable();
+	createTable(dbPath);
+	dbName_ = dbPath;
 }
 
 Storage::~Storage() {
 	if (db_) sqlite3_close(db_);
 }
 
-void Storage::createTable() {
+bool isValid(std::string dbPath) {
+	return std::all_of(dbPath.begin(), dbPath.end(), [](char c) {
+		return std::isalnum(c) || c == '_';
+	});
+}
+
+void Storage::createTable(std::string& dbPath) {
 	if (!db_) throw std::runtime_error("DB not opened");
 
-	const char* sql =
-		"CREATE TABLE IF NOT EXISTS tasks("
+	// Remove .db extension if present for table name
+	size_t pos = dbPath.rfind(".db");
+	if (pos != std::string::npos && pos == dbPath.length() - 3) {
+		dbPath = dbPath.substr(0, pos);
+	}
+
+	if (dbPath.empty()) {
+		dbPath = "tasks";
+	}else if (!isValid(dbPath)) {
+		throw std::runtime_error("Invalid database path: " + dbPath);
+	}
+
+	std::string sql =
+		"CREATE TABLE IF NOT EXISTS \"" + dbPath + "\" ("
 		"id INTEGER PRIMARY KEY AUTOINCREMENT,"
 		"title TEXT NOT NULL,"
 		"completed INTEGER NOT NULL DEFAULT 0,"
@@ -32,7 +55,7 @@ void Storage::createTable() {
 		");";
 
 	char* err = nullptr;
-	int rc = sqlite3_exec(db_, sql, nullptr, nullptr, &err);
+	int rc = sqlite3_exec(db_, sql.c_str(), nullptr, nullptr, &err);
 	if (rc != SQLITE_OK) {
 		std::string msg = err ? err : "unknown";
 		sqlite3_free(err);
@@ -42,10 +65,10 @@ void Storage::createTable() {
 
 long Storage::addTask(Task &task) {
 	if (!db_) throw std::runtime_error("DB not opened");
-	const char* sql = "INSERT INTO tasks (title, completed, completed_at) VALUES (?, ?, ?);";
+	std::string sql = "INSERT INTO \"" + dbName_ + "\" (title, completed, completed_at) VALUES (?, ?, ?);";
 	sqlite3_stmt *stmt = nullptr;
 
-	int rc = sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr);
+	int rc = sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
 		throw std::runtime_error(sqlite3_errmsg(db_));
 	}
@@ -74,9 +97,9 @@ long Storage::addTask(Task &task) {
 
 bool Storage::updateTask(const Task &task) {
 	if (task.getId() <= 0) return false;
-	const char* sql = "UPDATE tasks SET title = ?, completed = ?, completed_at = ? WHERE id = ?;";
+	std::string sql = "UPDATE \"" + dbName_ + "\" SET title = ?, completed = ?, completed_at = ? WHERE id = ?;";
 	sqlite3_stmt *stmt = nullptr;
-	int rc = sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr);
+	int rc = sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
 		return false;
 	}
@@ -101,9 +124,9 @@ bool Storage::updateTask(const Task &task) {
 }
 
 bool Storage::deleteTask(long id) {
-	const char* sql = "DELETE FROM tasks WHERE id = ?;";
+	std::string sql = "DELETE FROM \"" + dbName_ + "\" WHERE id = ?;";
 	sqlite3_stmt *stmt = nullptr;
-	if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) { return false; }
+	if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) { return false; }
 	sqlite3_bind_int64(stmt, 1, static_cast<sqlite3_int64>(id));
 	int rc = sqlite3_step(stmt);
 	sqlite3_finalize(stmt);
@@ -112,9 +135,9 @@ bool Storage::deleteTask(long id) {
 
 std::vector<Task> Storage::getAllTasks() {
 	std::vector<Task> out;
-	const char* sql = "SELECT id, title, completed, completed_at FROM tasks ORDER BY id;";
+	std::string sql = "SELECT id, title, completed, completed_at FROM \"" + dbName_ + "\" ORDER BY id;";
 	sqlite3_stmt* stmt = nullptr;
-	if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+	if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
 		std::cout << "There was an issue fetching tasks\n";
 		throw std::runtime_error(sqlite3_errmsg(db_));
 	}
@@ -129,9 +152,9 @@ std::vector<Task> Storage::getAllTasks() {
 }
 
 std::optional<Task> Storage::getTaskById(long id) {
-	const char* sql = "SELECT id, title, completed, completed_at FROM tasks WHERE id = ? LIMIT 1;";
+	std::string sql = "SELECT id, title, completed, completed_at FROM \"" + dbName_ + "\" WHERE id = ? LIMIT 1;";
 	sqlite3_stmt* stmt = nullptr;
-	if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+	if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
 		return std::nullopt;
 	}
 	sqlite3_bind_int64(stmt, 1, static_cast<sqlite3_int64>(id));
