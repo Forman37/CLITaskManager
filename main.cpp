@@ -106,68 +106,84 @@ int main() {
 
 		switch (static_cast<MenuOptions>(choice)) {
 			case MenuOptions::ADD: {
-				std::string title;
+				try {
+					std::string title;
 
-				std::cout << "Title : ";
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-				std::getline(std::cin, title);
-				tm.createTask(title);
-				tasks = tm.listTasks(); // Refresh list after adding
+					std::cout << "Title : ";
+					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					std::getline(std::cin, title);
+					tm.createTask(title);
+					tasks = tm.listTasks(); // Refresh list after adding
+				}catch (std::exception& e) {
+					std::cout << "Error adding task : " << e.what() << std::endl;
+				}
 				break;
 			}
 			case MenuOptions::UPDATE: {
-				long id;
-				std::string newTitle;
-				std::cout << "Which title would you like to update? Enter Task ID: ";
-				if (!(std::cin >> id)) {
-					std::cin.clear();
+				try {
+					long id;
+					std::string newTitle;
+					std::cout << "Which title would you like to update? Enter Task ID: ";
+					if (!(std::cin >> id)) {
+						std::cin.clear();
+						std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+						std::cout << "Invalid input!\n";
+						break;
+					}
+					std::cout << "New title : ";
 					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-					std::cout << "Invalid input!\n";
-					break;
+					std::getline(std::cin, newTitle);
+					if (tm.updateTitle(id, newTitle)) {
+						std::cout << "Task updated successfully.\n";
+					}else {
+						std::cout << "Failed to update task. Check if the ID is correct.\n";
+					}
+					tasks = tm.listTasks(); // Refresh list after updating
+				}catch (const std::exception& e) {
+					std::cout << "Error updating task: " << e.what() << "\n";
 				}
-				std::cout << "New title : ";
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-				std::getline(std::cin, newTitle);
-				if (tm.updateTitle(id, newTitle)) {
-					std::cout << "Task updated successfully.\n";
-				}else {
-					std::cout << "Failed to update task. Check if the ID is correct.\n";
-				}
-				tasks = tm.listTasks(); // Refresh list after updating
 				break;
 			}
 			case MenuOptions::REMOVE: {
-				long id;
-				std::cout << "Enter Task ID to Remove: ";
-				if (!(std::cin >> id)) {
-					std::cin.clear();
-					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-					std::cout << "Invalid input!\n";
-					break;
+				try {
+					long id;
+					std::cout << "Enter Task ID to Remove: ";
+					if (!(std::cin >> id)) {
+						std::cin.clear();
+						std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+						std::cout << "Invalid input!\n";
+						break;
+					}
+					if (tm.removeTask(id)) {
+						std::cout << "Task removed successfully.\n";
+					} else {
+						std::cout << "Failed to remove task. Check if the ID is correct.\n";
+					}
+					tasks = tm.listTasks(); // Refresh list after removal
+				}catch (const std::exception& e) {
+					std::cerr << "Error removing task: " << e.what() << "\n";
 				}
-				if (tm.removeTask(id)) {
-					std::cout << "Task removed successfully.\n";
-				} else {
-					std::cout << "Failed to remove task. Check if the ID is correct.\n";
-				}
-				tasks = tm.listTasks(); // Refresh list after removal
 				break;
 			}
 			case MenuOptions::COMPLETE: {
-				long id;
-				std::cout << "Enter Task ID to Mark as Completed: ";
-				if (!(std::cin >> id)) {
-					std::cin.clear();
-					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-					std::cout << "Invalid input!\n";
-					break;
+				try {
+					long id;
+					std::cout << "Enter Task ID to Mark as Completed: ";
+					if (!(std::cin >> id)) {
+						std::cin.clear();
+						std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+						std::cout << "Invalid input!\n";
+						break;
+					}
+					if (tm.markCompleted(id)) {
+						std::cout << "Task marked as completed successfully.\n";
+					} else {
+						std::cout << "Failed to mark task as completed. Check if the ID is correct.\n";
+					}
+					tasks = tm.listTasks(); // Refresh list after marking completed
+				} catch (const std::exception& e) {
+					std::cerr << "Error completing tasks: " << e.what() << "\n";
 				}
-				if (tm.markCompleted(id)) {
-					std::cout << "Task marked as completed successfully.\n";
-				} else {
-					std::cout << "Failed to mark task as completed. Check if the ID is correct.\n";
-				}
-				tasks = tm.listTasks(); // Refresh list after marking completed
 				break;
 			}
 			case MenuOptions::MOVECOMPLETED: {
@@ -184,7 +200,7 @@ int main() {
 				break;
 			}
 			case MenuOptions::EXIT: {
-
+				std::cout << "Exiting...\n";
 				return 0;
 			}
 			default: {
