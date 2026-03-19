@@ -1,22 +1,30 @@
-//
-// Created by James Forman on 3/12/26.
-//
+#pragma once
 
-#ifndef CLITASKMANAGER_TASKMANAGER_H
-#define CLITASKMANAGER_TASKMANAGER_H
-#include "Task.h"
-
+#include <string>
 #include <vector>
-
+#include <optional>
+#include "Task.h"
+#include "Storage.h"
 
 class TaskManager {
 public:
-	static int addTask(std::vector<Task>& tasks, int idCounter);
-	static void deleteTask(std::vector<Task>& tasks);
-	static void updateTask(std::vector<Task>& tasks);
-	static void completeTask(std::vector<Task>& tasks);
-	static std::vector<Task> moveCompleted(std::vector<Task>& tasks);
+	explicit TaskManager(Storage& storage);
+
+	// High-level operations (UI or main menu will call these)
+	// createTask persists and returns the Task with id set
+	Task createTask(const std::string& title);
+
+	// return current tasks from DB
+	std::vector<Task> listTasks();
+
+	// update and persist by id
+	bool updateTitle(long id, const std::string& newTitle);
+	bool markCompleted(long id);
+	bool removeTask(long id);
+
+	// convenience: return optional single task
+	std::optional<Task> getTask(long id);
+
+private:
+	Storage& storage_;
 };
-
-
-#endif //CLITASKMANAGER_TASKMANAGER_H

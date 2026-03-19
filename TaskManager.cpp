@@ -1,90 +1,41 @@
-//
-// Created by James Forman on 3/12/26.
-//
-
 #include "TaskManager.h"
-
+#include <chrono>
 #include <iostream>
-#include <vector>
 
-int TaskManager::addTask(std::vector<Task>& tasks, int idCounter) {
-	std::string title;
-	std::cout << "Enter title: ";
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	std::getline(std::cin, title);
+TaskManager::TaskManager(Storage& storage) : storage_(storage) {}
 
-	tasks.emplace_back(idCounter++, title);
+Task TaskManager::createTask(const std::string& title) {
+	Task t(title);
 
-	return idCounter;
+	// not completed by default; storage.addTask will set id
+	storage_.addTask(t);
+	return t; // id set in t
 }
 
-void TaskManager::deleteTask(std::vector<Task>& tasks) {
-	int removeChoice;
-	std::cout << "Please enter the number of the task you would like to remove : ";
-	if (!(std::cin >> removeChoice)) {
-		std::cin.clear();
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		std::cout << "Invalid input!\n";
-		return;
-	}
-
-	if (removeChoice > tasks.size()) {
-		std::cout << "That is not a valid choice for this task!\n";
-	}else {
-		tasks.erase(tasks.begin() + removeChoice - 1);
-		std::cout << "The task was removed successfully!\n";
-	}
+std::vector<Task> TaskManager::listTasks() {
+	return storage_.getAllTasks();
 }
 
-void TaskManager::updateTask(std::vector<Task>& tasks) {
-	int updateChoice;
-	std::cout << "Please enter the number of the task you would like to update : ";
-	if (!(std::cin >> updateChoice)) {
-		std::cin.clear();
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		std::cout << "Invalid input!\n";
-		return;
-	}
-
-	if (updateChoice > tasks.size()) {
-		std::cout << "That is not a valid choice for this task!\n";
-	}else {
-		std::cout << "What would you like to change the task to?\n";
-		std::cout << "Answer : ";
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		std::getline(std::cin, tasks[updateChoice - 1].title);
-	}
-
+bool TaskManager::updateTitle(long id, const std::string& newTitle) {
+	auto maybe = storage_.getTaskById(id);
+	if (!maybe.has_value()) return false;
+	Task t = *maybe;
+	t.setTitle(newTitle);
+	return storage_.updateTask(t);
 }
 
-void TaskManager::completeTask(std::vector<Task>& tasks) {
-	int index = 0;
-	std::cout << "Please select which task you would like to complete : ";
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	if (!(std::cin >> index)){
-		std::cin.clear();
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		std::cout << "Invalid input!\n";
-	}
-	std::cout << "Index : " << index << "   Task size : " << tasks.size() << "\n";
-	if (index <= tasks.size()) {
-		tasks[index - 1].markCompleted();
-		tasks[index - 1].setCompletedTime();
-	}else {
-		std::cout << "There is no task of that value\n";
-	}
+bool TaskManager::markCompleted(long id) {
+	auto maybe = storage_.getTaskById(id);
+	if (!maybe.has_value()) return false;
+	Task t = *maybe;
+	t.markCompleted(); // sets time if needed
+	return storage_.updateTask(t);
 }
 
-std::vector<Task> TaskManager::moveCompleted(std::vector<Task> &tasks) {
-	std::vector<Task> completedTasks;
-	std::vector<int> completedIndexes;
+bool TaskManager::removeTask(long id) {
+	return storage_.deleteTask(id);
+}
 
-	for (int i = 0; i < tasks.size(); i++) {
-		if (tasks[i].isCompleted()) {
-			completedTasks.emplace_back(tasks[i]);
-		}
-	}
-
-	std::erase_if(tasks, [](const Task& task) { return task.isCompleted(); });
-	return completedTasks;
+std::optional<Task> TaskManager::getTask(long id) {
+	return storage_.getTaskById(id);
 }

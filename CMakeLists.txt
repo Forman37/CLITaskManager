@@ -10,4 +10,7 @@ add_executable(CLITaskManager main.cpp
         Storage.h
         TaskManager.cpp
         TaskManager.h
+        third_party/sqlite/sqlite3.c
 )
+
+target_include_directories(CLITaskManager PRIVATE third_party/sqlite)

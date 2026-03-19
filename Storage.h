@@ -7,15 +7,32 @@
 
 #include "Task.h"
 #include <vector>
+#include <optional>
+
+extern "C" {
+#include "sqlite3.h"
+}
 
 class Storage {
 public:
-	Storage();
+	explicit Storage(const std::string& dbPath);
 	~Storage();
 
-	static std::vector<Task> loadTasks();
+	void createTable();
 
-	static bool saveTasks(const std::vector<Task>& tasks, const std::string &fileName, bool truncate);
+	//CRUD
+	long addTask(Task& task);
+	bool updateTask(const Task& task);
+	bool deleteTask(long id);
+
+	//Read
+	std::vector<Task> getAllTasks();
+	std::optional<Task> getTaskById(long id);
+
+	// Raw access
+	sqlite3* get() { return db_; }
+private:
+	sqlite3* db_ = nullptr;
 };
 
 
