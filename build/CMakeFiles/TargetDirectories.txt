@@ -1,0 +1,3 @@
+/Users/jamesforman/dev/CLionProjects/CLITaskManager/build/CMakeFiles/CLITaskManager.dir
+/Users/jamesforman/dev/CLionProjects/CLITaskManager/build/CMakeFiles/edit_cache.dir
+/Users/jamesforman/dev/CLionProjects/CLITaskManager/build/CMakeFiles/rebuild_cache.dir

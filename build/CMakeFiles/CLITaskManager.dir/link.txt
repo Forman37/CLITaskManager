@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/CLITaskManager.dir/main.cpp.o CMakeFiles/CLITaskManager.dir/Task.cpp.o CMakeFiles/CLITaskManager.dir/Storage.cpp.o CMakeFiles/CLITaskManager.dir/TaskManager.cpp.o CMakeFiles/CLITaskManager.dir/third_party/sqlite/sqlite3.c.o -o CLITaskManager
