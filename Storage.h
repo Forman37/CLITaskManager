@@ -36,7 +36,7 @@ public:
 	// Raw access
 	sqlite3* get() { return db_; }
 	std::vector<std::string> showTables();
-	void changeTable(std::string newTablePath);
+	void changeTable(const std::string &newTablePath);
 	void deleteTable(const std::string &tablePath);
 
 private:

@@ -26,7 +26,7 @@ Storage::~Storage() {
 }
 
 bool isValid(std::string dbPath) {
-	return std::all_of(dbPath.begin(), dbPath.end(), [](char c) {
+	return std::ranges::all_of(dbPath, [](const char c) {
 		return std::isalnum(c) || c == '_';
 	});
 }
@@ -187,7 +187,6 @@ void Storage::moveCompletedToNewTable(std::string newTablePath) {
 	if (rc != SQLITE_OK) {
 		std::cout << "There was an issue fetching tasks while saving\n";
 		throw std::runtime_error(sqlite3_errmsg(db_));
-		return;
 	}
 
 	while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -254,7 +253,7 @@ std::vector<std::string> Storage::showTables() {
 	return out;
 }
 
-void Storage::changeTable(std::string newTablePath) {
+void Storage::changeTable(const std::string &newTablePath) {
 	if (newTablePath.empty()) {
 		throw std::runtime_error("Empty Table Path");
 	}
@@ -273,7 +272,6 @@ void Storage::deleteTable(const std::string &tablePath) {
 
 	std::string sql = "DROP TABLE IF EXISTS \"" + tablePath + "\";";
 	char *err = nullptr;
-	sqlite3_stmt* stmt = nullptr;
 	int rc = sqlite3_exec(db_, sql.c_str(), nullptr, nullptr, &err);
 
 	if (rc != SQLITE_OK) {
